@@ -26,6 +26,13 @@ lazy val core = (project in file("core"))
     )
   )
 
+lazy val example = (project in file("example"))
+  .settings(commonSettings)
+  .settings(
+    name := "metpv11-parser-example"
+  )
+  .dependsOn(core)
+
 scalariformPreferences := scalariformPreferences.value
   .setPreference(AlignSingleLineCaseStatements, true)
   .setPreference(DoubleIndentConstructorArguments, true)
