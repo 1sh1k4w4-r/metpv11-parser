@@ -27,7 +27,7 @@ object Header extends RegexParsers {
 
   val pointCode: Parser[String] = """\d{5}""".r
 
-  val pointName: Parser[String] = """[A-Z]+""".r
+  val pointName: Parser[String] = """[A-Z-]+""".r
 
   val lat: Parser[Double] = """\d{1,4}""".r ^^ { _.toDouble }
 
