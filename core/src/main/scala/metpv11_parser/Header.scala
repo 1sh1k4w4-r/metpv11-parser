@@ -37,7 +37,7 @@ object Header extends RegexParsers {
 
   val lonLe = latLe
 
-  val elevation: Parser[Double] = """\d{1,4}.\d""".r ^^ { _.toDouble }
+  val elevation: Parser[Double] = """-*\d{1,4}.\d""".r ^^ { _.toDouble }
 
   val value: Parser[String ~ String ~ Double ~ Double ~ Double ~ Double ~ Double] = pointCode ~ pointName ~ lat ~ latLe ~ lon ~ lonLe ~ elevation <~ opt(eol)
 
