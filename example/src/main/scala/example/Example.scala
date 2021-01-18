@@ -16,17 +16,24 @@ object Example extends App {
     FileUtils.existsDirectory(Paths.get(dirname)) match {
       case Left(error) => println(error.message)
       case Right(basePath) => {
-        FileUtils.existsDirectory(Paths.get(basePath.toString, "多照年")) match {
-          case Left(error) => println(error.message)
-          case Right(maxPath) => {
-            val files = new File(maxPath.toUri).listFiles.toList
+        List("平均年", "寡照年", "多照年").foreach { t =>
+          FileUtils.existsDirectory(Paths.get(basePath.toString, t)) match {
+            case Left(error) => println(error.message)
+            case Right(maxPath) => {
+              val files = new File(maxPath.toUri).listFiles.toList
 
-            files.foreach { file =>
-              print(s"${file.toPath.normalize.toString} => ")
-              METPV11Parser.fromString(Source.fromFile(file).getLines.toList).fold {
-                println("失敗")
-              } { _ =>
-                println("成功")
+              files.foreach { file =>
+                METPV11Parser.parse(Source.fromFile(file).getLines().mkString("\n")) match {
+                  case Right(_) => {
+                    // do nothing
+                  }
+                  case Left((message, next)) => {
+                    println(s"${file.toPath.normalize.toString} => 失敗")
+
+                    val pos = next.pos
+                    println(s"L${pos.line} : $message")
+                  }
+                }
               }
             }
           }
