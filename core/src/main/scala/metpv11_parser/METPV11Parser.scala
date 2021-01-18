@@ -147,7 +147,7 @@ object METPV11Parser extends RegexParsers {
   def parse(input: String): Either[(String, Input), (Header, List[Data])] = {
     parseAll(value, input) match {
       case Success(result, _) => Right((result._1, result._2))
-      case NoSuccess(message, next) => Left((message,next))
+      case NoSuccess(message, next) => Left((message, next))
     }
   }
 }
