@@ -65,6 +65,8 @@ object DataType {
     override val kana: String = "積雪深"
   }
 
+  val values = Seq(GlobalSolarRadiation, DirectSolarRadiation, DiffuseSolarIrradiance, DaylightHour, Temperature, WindDirection, WindSpeed, Precipitation, SnowDepth)
+
   def fromString(str: String): Option[DataType] = {
     str match {
       case "00001" => Some(GlobalSolarRadiation)

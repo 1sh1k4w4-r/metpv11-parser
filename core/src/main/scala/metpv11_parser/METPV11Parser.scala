@@ -15,11 +15,13 @@ object METPV11Parser extends RegexParsers {
     average: Int,
     dayNumber: Int)
 
+  override def skipWhitespace: Boolean = false
+
   val eol = "\n" | "\\z".r
 
   /*
   ヘッダー部
-  地点コード[5] 地点名[22] 緯度-度[4]	緯度-分以下[6]	経度-度[4]	経度-分以下(6） 標高m[6]
+  地点コード[5] スペース[1] 地点名[22] スペース[1] 緯度(度)[4] スペース[1] 緯度(分)[4] スペース[1] 経度(度)[4] スペース[1] 経度(分)[4] スペース[1] 標高[7]
 
   [例1]
   11001 SOYAMISAKI             45 31.2  141 56.1    26.0
@@ -27,36 +29,36 @@ object METPV11Parser extends RegexParsers {
   12632 ROKUGO                 43 18.1  142 31.3   315.0
    */
 
-  val pointCode: Parser[String] = """\d{5}""".r
+  val pointCode: Parser[String] = """\d{5}""".r <~ whiteSpace
 
-  val pointName: Parser[String] = """[A-Z-]+""".r
+  val pointName: Parser[String] = """[A-Z-]{1,22}""".r <~ whiteSpace
 
-  val lat: Parser[Double] = """\d{1,4}""".r ^^ { _.toDouble }
+  val lat: Parser[Double] = """\d{1,4}""".r <~ whiteSpace ^^ { _.toDouble }
 
-  val latLe: Parser[Double] = """\d{1,3}.\d""".r ^^ { _.toDouble }
+  val latMinute: Parser[Double] = """\d{1,3}.\d""".r <~ whiteSpace ^^ { _.toDouble }
 
   val lon = lat
 
-  val lonLe = latLe
+  val lonMinute = latMinute
 
-  val elevation: Parser[Double] = """-*\d{1,4}.\d""".r ^^ { _.toDouble }
+  val elevation: Parser[Double] = """-*\d{1,7}.\d""".r ^^ { _.toDouble }
 
   val header: Parser[Header] =
-    pointCode ~ pointName ~ lat ~ latLe ~ lon ~ lonLe ~ elevation <~ opt(eol) ^^ {
-      case pointCode ~ pointName ~ lat ~ latLe ~ lon ~ lonLe ~ elevation =>
+    pointCode ~ pointName ~ lat ~ latMinute ~ lon ~ lonMinute ~ elevation <~ opt(eol) ^^ {
+      case pointCode ~ pointName ~ lat ~ latMinute ~ lon ~ lonMinute ~ elevation =>
         Header(
           pointCode,
           pointName,
           lat,
-          latLe,
+          latMinute,
           lon,
-          lonLe,
+          lonMinute,
           elevation)
     }
 
   /*
   データ部
-  データ種別番号[5] 月[2]日[2] 風速計高さ[5] 毎次データ[4]*24 日最大値[4] 日最小値[4] 日積算値[4] 日平均値[4] 日付番号[4]
+  データ種別番号[5] スペース[1] 月[2]日[2] 風速計高さ[5] 毎次データ[5]*24 日最大値[5] 日最小値[5] 日積算値[5] 日平均値[5] 日付番号[5]
 
   [例1]
   00002  1 2  8.0   02   02   02   02   02   02   03   06   06   06   06   06   06   06   06   06   03   02   02   02   02   02   02   02    0 8888    0 8888    2
@@ -64,27 +66,27 @@ object METPV11Parser extends RegexParsers {
   00005 1220  8.0 -938 -978-1048-1048-1028-1028-1018-1018-1088-1018-1038 -948 -998 -968 -948 -868 -928 -898 -888 -948 -938 -938 -958 -938  -86 -108 8888  -97  354
   */
 
-  val twoDigits: Parser[Int] =
-    """\d{1,2}""".r ^^ {
-      _.toInt
-    }
+  val minusOp = "-".r
+  val number = "[0-9]".r
+  val space = """\s""".r
+  val dot = "."
 
-  val monthDay: Parser[(Int, Int)] = twoDigits ~ twoDigits ^^ { case month ~ day => (month, day) }
+  val unsignedTwoInteger: Parser[Int] = repN(2, space | number) ^^ {
+    _.mkString.trim.toInt
+  }
 
-  val fourDigits: Parser[Int] =
-    """-*\d{1,4}""".r ^^ {
-      _.toInt
-    }
+  val monthDay: Parser[(Int, Int)] = unsignedTwoInteger ~ unsignedTwoInteger ^^ {
+    case month ~ day => (month, day)
+  }
 
-  val anemometerHeight: Parser[Double] =
-    """\d{1,2}.\d""".r ^^ {
-      _.toDouble
-    }
+  val signedFiveInteger = repN(5, minusOp | space | number) ^^ { _.mkString.trim.toInt }
 
-  val hours: Parser[List[Int]] = repN(24, fourDigits)
+  val unsignedFiveDecimal = repN(5, space | number | dot) ^^ { _.mkString.trim.toDouble }
+
+  val hours: Parser[List[Int]] = repN(24, signedFiveInteger)
 
   def row(dateType: DataType): Parser[Raw] = {
-    dateType.number ~ monthDay ~ anemometerHeight ~ hours ~ fourDigits ~ fourDigits ~ fourDigits ~ fourDigits ~ fourDigits <~ opt(eol) ^^ {
+    (dateType.number <~ space) ~ monthDay ~ unsignedFiveDecimal ~ hours ~ signedFiveInteger ~ signedFiveInteger ~ signedFiveInteger ~ signedFiveInteger ~ signedFiveInteger <~ opt(eol) ^^ {
       case dataType ~ monthDay ~ anemometerHeight ~ hours ~ max ~ min ~ accu ~ avg ~ dayNumber =>
         Raw(
           dataType,
