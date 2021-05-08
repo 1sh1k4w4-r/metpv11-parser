@@ -1,13 +1,10 @@
 import scalariform.formatter.preferences._
 
 lazy val commonSettings = Seq(
-  organization := "com.github.1sh1k4w4-r",
+  organization := "com.github.ishikawawawa",
   scalaVersion := "2.12.8",
   scalacOptions ++= Seq("-deprecation"),
-  version := "0.1.1",
-  githubOwner := "1sh1k4w4-r",
-  githubRepository := "metpv11-parser",
-  githubTokenSource := TokenSource.GitConfig("github.token")
+  version := "0.1.2",
 )
 
 lazy val root = (project in file("."))
@@ -25,6 +22,13 @@ lazy val core = (project in file("core"))
       "org.scalatest" %% "scalatest" % "3.0.5" % Test
     )
   )
+
+lazy val example = (project in file("example"))
+  .settings(commonSettings)
+  .settings(
+    name := "metpv11-parser-example"
+  )
+  .dependsOn(core)
 
 scalariformPreferences := scalariformPreferences.value
   .setPreference(AlignSingleLineCaseStatements, true)
