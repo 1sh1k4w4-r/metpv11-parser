@@ -21,17 +21,13 @@ object Example extends App {
             case Left(error) => println(error.message)
             case Right(maxPath) => {
               val files = new File(maxPath.toUri).listFiles.toList
-
               files.foreach { file =>
-                METPV11Parser.parse(Source.fromFile(file).getLines().mkString("\n")) match {
-                  case Right(_) => {
-                    // do nothing
-                  }
-                  case Left((message, next)) => {
-                    println(s"${file.toPath.normalize.toString} => 失敗")
-
-                    val pos = next.pos
-                    println(s"L${pos.line} : $message")
+                println(file.getName)
+                try {
+                  val res = METPV11Parser.parse(Source.fromFile(file).getLines().mkString("\n"))
+                } catch {
+                  case e: Exception => {
+                    println(s"${file.toPath.normalize.toString} => 失敗(${e.getMessage})")
                   }
                 }
               }
