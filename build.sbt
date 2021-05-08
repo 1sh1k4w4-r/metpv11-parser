@@ -1,13 +1,10 @@
 import scalariform.formatter.preferences._
 
 lazy val commonSettings = Seq(
-  organization := "com.github.1sh1k4w4-r",
+  organization := "com.github.ishikawawawa",
   scalaVersion := "2.12.8",
   scalacOptions ++= Seq("-deprecation"),
   version := "0.1.0",
-  githubOwner := "1sh1k4w4-r",
-  githubRepository := "metpv11-parser",
-  githubTokenSource := TokenSource.GitConfig("github.token")
 )
 
 lazy val root = (project in file("."))
